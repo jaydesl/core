@@ -5,15 +5,18 @@ import logging
 import os
 import time
 
-from RestrictedPython import compile_restricted_exec
+from RestrictedPython import (
+    compile_restricted_exec,
+    safe_builtins,
+    utility_builtins,
+    limited_builtins,
+)
 from RestrictedPython.Eval import default_guarded_getitem
 from RestrictedPython.Guards import (
     full_write_guard,
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
-    safe_builtins,
 )
-from RestrictedPython.Utilities import utility_builtins
 import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
@@ -177,11 +180,21 @@ def execute(hass, filename, source, data=None):
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
+    
+    extra_builtins = {
+        "sorted": sorted,
+        "any": any,
+        "all": all,
+        "sum": sum,
+        "min": min,
+        "max": max,
+    }
 
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
+    builtins.update(limited_builtins)
+    builtins.update(extra_builtins)
     builtins["datetime"] = datetime
-    builtins["sorted"] = sorted
     builtins["time"] = TimeWrapper()
     builtins["dt_util"] = dt_util
     logger = logging.getLogger(f"{__name__}.{filename}")
