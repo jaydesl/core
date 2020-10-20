@@ -190,11 +190,17 @@ def execute(hass, filename, source, data=None):
         "sorted": sorted,
         "time": TimeWrapper(),
         "dt_util": dt_util,
+        "min": min,
+        "max": max,
+        "sum": sum,
+        "any": any,
+        "all": all,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
+    builtins.update(limited_builtins)
     builtins.update(extra_builtins)
-    
+
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
