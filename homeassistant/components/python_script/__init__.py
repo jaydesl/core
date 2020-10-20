@@ -5,15 +5,18 @@ import logging
 import os
 import time
 
-from RestrictedPython import compile_restricted_exec
+from RestrictedPython import (
+    compile_restricted_exec,
+    safe_builtins,
+    utility_builtins,
+    limited_builtins,
+)
 from RestrictedPython.Eval import default_guarded_getitem
 from RestrictedPython.Guards import (
     full_write_guard,
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
-    safe_builtins,
 )
-from RestrictedPython.Utilities import utility_builtins
 import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
@@ -151,7 +154,9 @@ def execute(hass, filename, source, data=None):
 
     if compiled.warnings:
         _LOGGER.warning(
-            "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
+            "Warning loading script %s: %s",
+            filename,
+            ", ".join(compiled.warnings),
         )
 
     def protected_getattr(obj, name, default=None):
@@ -174,7 +179,9 @@ def execute(hass, filename, source, data=None):
             or isinstance(obj, TimeWrapper)
             and name not in ALLOWED_TIME
         ):
-            raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
+            raise ScriptError(
+                f"Not allowed to access {obj.__class__.__name__}.{name}"
+            )
 
         return getattr(obj, name, default)
 
@@ -218,7 +225,9 @@ class StubPrinter:
     def _call_print(self, *objects, **kwargs):
         """Print text."""
         # pylint: disable=no-self-use
-        _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
+        _LOGGER.warning(
+            "Don't use print() inside scripts. Use logger.info() instead"
+        )
 
 
 class TimeWrapper:
